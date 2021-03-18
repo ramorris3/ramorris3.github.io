@@ -142,7 +142,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>slide(dir)
 &lt;p>&lt;strong>Note:&lt;/strong> If this feels like a contrived example, that&amp;rsquo;s because it is. But this was a very real, practical problem for &lt;a href="https://store.steampowered.com/app/1443100/Rogueslide/">my game Rogueslide&lt;/a>.&lt;/p>
 &lt;p>&lt;figure>
 &lt;img src="https://littlegames.dev/directional-foreach/rogueslide-example.gif" alt="Rogueslide demo gif">
-&lt;figcaption>&lt;/figcaption>
+&lt;figcaption>Tile slide code is separate from tile collision code in my game Rogueslide. And the player tile behaves differently from the goblin tiles, and the potion tiles behave differently, and the rock tiles, and the scroll tiles, and...&lt;/figcaption>
 &lt;/figure>&lt;/p>
 &lt;p>In that game, slide logic is separated from collide logic. Even more difficult, tiles each behave differently depending on their type, but all of their behaviors are impacted by the slide direction. If each tile has methods that all need to be called in a directional order, then we&amp;rsquo;re looking at tons of unnecessary &lt;code>when(dir)&lt;/code> blocks scattered throughout our code.&lt;/p>
 &lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#75715e">// Bad example with tons of repeated directional double-loops

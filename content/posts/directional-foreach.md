@@ -126,7 +126,7 @@ when (dir) {
 }
 ```
 
-Yikes.  There are a lot of blocks of code that look *very* similar, but just different enough to be hard to repeat.  Also, the code here has been simplified quite a bit. In the actual [example project](https://github.com/ramorris3/halcyon), there's more that goes into tile sliding and collisions: increasing the player's score and updating the UI accordingly, checking if the board is full (game over), etc.  It goes without saying that your directional loops are going to get huge if you're not careful.
+Yikes.  There are a lot of blocks of code that look *very* similar, but just different enough to be hard to repeat.  Also, the code here has been simplified quite a bit. In the actual [example project](https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/high-order-functions), there's more that goes into tile sliding and collisions: increasing the player's score and updating the UI accordingly, checking if the board is full (game over), etc.  It goes without saying that your directional loops are going to get huge if you're not careful.
 
 Let's start by making tile slides/collisions generic, and then plopping that function in there.
 
@@ -296,4 +296,4 @@ Even though this article's example was fairly contrived, I hope it helps you thi
 * A `Timer` utility class that plugs into the game's core loop, decrements itself over time, and invokes a callback when it finishes.
 * An optional `animationEnd` lambda on a custom `AnimationsManager` class that executes arbitrary logic whenever an animation finishes.
 
-Thanks for tuning in.  If you're interested in looking at some source code, I've published a [complete sample LibGDX project for this article to github]().  (The `directionalForEach` code lives in `Board.kt`.)
+Thanks for tuning in.  If you're interested in looking at some source code, I've published a [complete sample LibGDX project for this article to github](https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/high-order-functions).  (The `directionalForEach` code lives in `Board.kt`.)

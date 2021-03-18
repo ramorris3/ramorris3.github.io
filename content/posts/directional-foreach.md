@@ -177,7 +177,7 @@ In that game, slide logic is separated from collide logic.  Even more difficult,
 
 ```kotlin
 // Bad example with tons of repeated directional double-loops
-def slideTiles(dir: Direction) {
+fun slideTiles(dir: Direction) {
     when(dir) {
         Direction.LEFT -> {
             (0 until rows).forEach { ty ->
@@ -191,7 +191,7 @@ def slideTiles(dir: Direction) {
     }
 }
 
-def collideTiles(dir: Direction) {
+fun collideTiles(dir: Direction) {
     when(dir) {
         Direction.LEFT -> {
             (0 until rows).forEach { ty ->
@@ -205,7 +205,7 @@ def collideTiles(dir: Direction) {
     }
 }
 
-def preSlide(dir: Direction) {
+fun preSlide(dir: Direction) {
     when(dir) {
         Direction.LEFT -> {
             (0 until rows).forEach { ty ->
@@ -219,7 +219,7 @@ def preSlide(dir: Direction) {
     }
 }
 
-def postSlide(dir: Direction) {
+fun postSlide(dir: Direction) {
     when(dir) {
         Direction.LEFT -> {
             (0 until rows).forEach { ty ->
@@ -254,7 +254,7 @@ If you're getting lost in the lingo (functions on functions with functions), bea
 ```kotlin
 // Now that this method is generalized, we only have to do this 
 // directional looping logic once.
-def directionalForEach(dir: Direction, callback: ((d: Direction, t: tile) -> Unit)) {
+fun directionalForEach(dir: Direction, callback: ((d: Direction, t: tile) -> Unit)) {
     when(dir) {
         Direction.LEFT -> {
             (0 until rows).forEach { ty ->

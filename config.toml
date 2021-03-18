@@ -1,0 +1,54 @@
+baseURL = "https://littlegames.dev"
+languageCode = "en-us"
+title = "Big Ideas for Little Games"
+theme = "anubis"
+paginate = 3
+
+disqusShortname = ""
+googleAnalytics = ""
+
+[author]
+  name = "Alex Morris"
+
+[params]
+   author = "Alex Morris"
+   custom_css = ["/css/custom.css"]
+   description = "Game programming patterns for small, independent teams."
+   dateFormat = "2006-01-02"
+   mainSections = ["posts"]
+   paginationSinglePost = true
+   style = "light"
+   readMore = false
+
+   # utteranc.es support
+   utterancesRepo = ""  # mandatory
+   utterancesTheme = "" # optional
+   utterancesIssue = "" # optional
+   utterancesLabel = "" # optional
+
+[menu]
+
+  [[menu.main]]
+    identifier = "tags"
+    name = "Tags"
+    url = "/tags/"
+    weight = 1
+
+  [[menu.main]]
+    name = "Archive"
+    identifier = "archive"
+    url = "/archive/"
+    weight = 2
+
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 3
+
+[taxonomies]
+category = "categories"
+tag = "tags"
+
+[markup.goldmark.renderer]
+unsafe = true

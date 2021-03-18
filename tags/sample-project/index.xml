@@ -102,7 +102,7 @@ tile.moveUp()
 }
 }
 }
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Yikes. There are a lot of blocks of code that look &lt;em>very&lt;/em> similar, but just different enough to be hard to repeat. Also, the code here has been simplified quite a bit. In the actual &lt;a href="https://github.com/ramorris3/halcyon">example project&lt;/a>, there&amp;rsquo;s more that goes into tile sliding and collisions: increasing the player&amp;rsquo;s score and updating the UI accordingly, checking if the board is full (game over), etc. It goes without saying that your directional loops are going to get huge if you&amp;rsquo;re not careful.&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Yikes. There are a lot of blocks of code that look &lt;em>very&lt;/em> similar, but just different enough to be hard to repeat. Also, the code here has been simplified quite a bit. In the actual &lt;a href="https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/high-order-functions">example project&lt;/a>, there&amp;rsquo;s more that goes into tile sliding and collisions: increasing the player&amp;rsquo;s score and updating the UI accordingly, checking if the board is full (game over), etc. It goes without saying that your directional loops are going to get huge if you&amp;rsquo;re not careful.&lt;/p>
 &lt;p>Let&amp;rsquo;s start by making tile slides/collisions generic, and then plopping that function in there.&lt;/p>
 &lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#66d9ef">when&lt;/span> (dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
@@ -247,4 +247,4 @@ directionalForEach(direction) { dir, tile &lt;span style="color:#f92672">-&amp;g
 &lt;li>A &lt;code>Timer&lt;/code> utility class that plugs into the game&amp;rsquo;s core loop, decrements itself over time, and invokes a callback when it finishes.&lt;/li>
 &lt;li>An optional &lt;code>animationEnd&lt;/code> lambda on a custom &lt;code>AnimationsManager&lt;/code> class that executes arbitrary logic whenever an animation finishes.&lt;/li>
 &lt;/ul>
-&lt;p>Thanks for tuning in. If you&amp;rsquo;re interested in looking at some source code, I&amp;rsquo;ve published a &lt;a href="">complete sample LibGDX project for this article to github&lt;/a>. (The &lt;code>directionalForEach&lt;/code> code lives in &lt;code>Board.kt&lt;/code>.)&lt;/p></description></item></channel></rss>
+&lt;p>Thanks for tuning in. If you&amp;rsquo;re interested in looking at some source code, I&amp;rsquo;ve published a &lt;a href="https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/high-order-functions">complete sample LibGDX project for this article to github&lt;/a>. (The &lt;code>directionalForEach&lt;/code> code lives in &lt;code>Board.kt&lt;/code>.)&lt;/p></description></item></channel></rss>

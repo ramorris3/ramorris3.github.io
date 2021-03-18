@@ -171,7 +171,7 @@ That's much better, but you'll find yourself repeating that big outer `when(dir)
 
 **Note:** If this feels like a contrived example, that's because it is. But this was a very real, practical problem for [my game Rogueslide](https://store.steampowered.com/app/1443100/Rogueslide/).  
 
-![Rogueslide demo gif](/directional-foreach/rogueslide-example.gif)
+![Rogueslide demo gif](/directional-foreach/rogueslide-example.gif "Tile slide code is separate from tile collision code in my game Rogueslide.  And the player tile behaves differently from the goblin tiles, and the potion tiles behave differently, and the rock tiles, and the scroll tiles, and...")
 
 In that game, slide logic is separated from collide logic.  Even more difficult, tiles each behave differently depending on their type, but all of their behaviors are impacted by the slide direction.  If each tile has methods that all need to be called in a directional order, then we're looking at tons of unnecessary `when(dir)` blocks scattered throughout our code.
 

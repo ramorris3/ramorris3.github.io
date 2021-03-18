@@ -2,7 +2,7 @@
 &lt;h2 id="the-problem-slidey-tiles">The Problem: Slidey Tiles&lt;/h2>
 &lt;p>Let&amp;rsquo;s look at a simple 2048-style puzzle game. The user gives directional input, and all the tiles on the board move based on that input.&lt;/p>
 &lt;p>&lt;figure>
-&lt;img src="https://littlegames.dev/directional-foreach/stars-example.gif" alt="Simple example of a common tile-sliding puzzle game">
+&lt;img src="https://littlegames.dev/directional-foreach/stars-example.gif" alt="Simple example of a tile-sliding puzzle game">
 &lt;figcaption>Our example project is like 2048 lite: stars don&amp;#39;t grow when they combine.&lt;/figcaption>
 &lt;/figure>&lt;/p>
 &lt;p>The simplest (or at least most intuitive) way to store these tiles in memory would be to create a 2d array with nullable entries. Assuming the tiles are all responsible for their own update and draw logic, it&amp;rsquo;s really easy to update every tile at once each frame:&lt;/p>

@@ -146,7 +146,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>slide(dir)
 &lt;/figure>&lt;/p>
 &lt;p>In that game, slide logic is separated from collide logic. Even more difficult, tiles each behave differently depending on their type, but all of their behaviors are impacted by the slide direction. If each tile has methods that all need to be called in a directional order, then we&amp;rsquo;re looking at tons of unnecessary &lt;code>when(dir)&lt;/code> blocks scattered throughout our code.&lt;/p>
 &lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#75715e">// Bad example with tons of repeated directional double-loops
-&lt;/span>&lt;span style="color:#75715e">&lt;/span>def slideTiles(dir: Direction) {
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">slideTiles&lt;/span>(dir: Direction) {
 &lt;span style="color:#66d9ef">when&lt;/span>(dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
 (&lt;span style="color:#ae81ff">0&lt;/span> until rows).forEach { ty &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
@@ -159,7 +159,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>slide(dir)
 &lt;span style="color:#75715e">// ... and for the other 3 directions
 &lt;/span>&lt;span style="color:#75715e">&lt;/span> }
 }
-def collideTiles(dir: Direction) {
+&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">collideTiles&lt;/span>(dir: Direction) {
 &lt;span style="color:#66d9ef">when&lt;/span>(dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
 (&lt;span style="color:#ae81ff">0&lt;/span> until rows).forEach { ty &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
@@ -172,7 +172,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>collide(dir)
 &lt;span style="color:#75715e">// ... and for the other 3 directions
 &lt;/span>&lt;span style="color:#75715e">&lt;/span> }
 }
-def preSlide(dir: Direction) {
+&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">preSlide&lt;/span>(dir: Direction) {
 &lt;span style="color:#66d9ef">when&lt;/span>(dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
 (&lt;span style="color:#ae81ff">0&lt;/span> until rows).forEach { ty &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
@@ -185,7 +185,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>preSlide(dir)
 &lt;span style="color:#75715e">// ... and for the other 3 directions
 &lt;/span>&lt;span style="color:#75715e">&lt;/span> }
 }
-def postSlide(dir: Direction) {
+&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">postSlide&lt;/span>(dir: Direction) {
 &lt;span style="color:#66d9ef">when&lt;/span>(dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
 (&lt;span style="color:#ae81ff">0&lt;/span> until rows).forEach { ty &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
@@ -211,7 +211,7 @@ tile&lt;span style="color:#f92672">?.&lt;/span>postSlide(dir)
 &lt;p>If you&amp;rsquo;re getting lost in the lingo (functions on functions with functions), bear with me. This will make much more sense when you see it in action below:&lt;/p>
 &lt;div class="highlight">&lt;pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#75715e">// Now that this method is generalized, we only have to do this
 &lt;/span>&lt;span style="color:#75715e">// directional looping logic once.
-&lt;/span>&lt;span style="color:#75715e">&lt;/span>def directionalForEach(dir: Direction, callback: ((d: Direction, t: tile) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> Unit)) {
+&lt;/span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">directionalForEach&lt;/span>(dir: Direction, callback: ((d: Direction, t: tile) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> Unit)) {
 &lt;span style="color:#66d9ef">when&lt;/span>(dir) {
 Direction.LEFT &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
 (&lt;span style="color:#ae81ff">0&lt;/span> until rows).forEach { ty &lt;span style="color:#f92672">-&amp;gt;&lt;/span>

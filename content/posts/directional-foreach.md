@@ -11,7 +11,7 @@ When you have a tile-based game, it's common to store actors in a double-nested 
 ## The Problem: Slidey Tiles
 Let's look at a simple 2048-style puzzle game.  The user gives directional input, and all the tiles on the board move based on that input.
 
-![Simple example of a common tile-sliding puzzle game](/directional-foreach/stars-example.gif "Our example project is like 2048 lite: stars don't grow when they combine.")
+![Simple example of a tile-sliding puzzle game](/directional-foreach/stars-example.gif "Our example project is like 2048 lite: stars don't grow when they combine.")
 
 The simplest (or at least most intuitive) way to store these tiles in memory would be to create a 2d array with nullable entries. Assuming the tiles are all responsible for their own update and draw logic, it's really easy to update every tile at once each frame:
 

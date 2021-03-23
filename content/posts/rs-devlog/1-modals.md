@@ -1,7 +1,7 @@
 ---
 title: "Make-it Monday: Rogueslide Devlog #1"
 date: 2021-03-22T20:05:03-06:00
-draft: true
+draft: false
 summary: "This week for Make-it Monday I'm introducing my upcoming game Rogueslide.  I also cover some of the technical problems I encountered with the game's UI, and how I solved those problems."
 tags: ["rogueslide", "devlog", "make it monday", "ui"]
 ---

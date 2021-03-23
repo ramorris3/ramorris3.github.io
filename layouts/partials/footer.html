@@ -1,0 +1,42 @@
+<footer class="common-footer">
+<!-- Begin Mailchimp Signup Form -->
+<div id="mc_embed_signup">
+<form action="https://dev.us1.list-manage.com/subscribe/post?u=515a1fe97dd6c90c23716c5b0&amp;id=8a228e0da4" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+    <div id="mc_embed_signup_scroll">
+	
+	<input type="email" value="" name="EMAIL" class="email" id="mce-EMAIL" placeholder="Email address" required>
+    <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true"><input type="text" name="b_515a1fe97dd6c90c23716c5b0_8a228e0da4" tabindex="-1" value=""></div>
+    <div class="clear"><input type="submit" value="Subscribe" name="subscribe" id="mc-embedded-subscribe" class="button"></div>
+    </div>
+</form>
+</div>
+
+<!--End mc_embed_signup-->
+
+    {{ $languagesCount := $.Site.Home.AllTranslations }}
+    {{ if gt $languagesCount 1 }}
+        {{ partial "languageSelect.html" . }}
+    {{ end }}
+
+    <div class="common-footer-bottom">
+        {{ if .Site.Menus.footer }}
+            {{ $currentPage := . }}
+            <ul class="footer-menu">
+            {{ range .Site.Menus.footer }}
+            <li><a class="{{if or ($currentPage.IsMenuCurrent "footer" .) ($currentPage.HasMenuCurrent "footer" .) }} active{{end}}" href="{{ .URL | absLangURL }}" title="{{ .Title }}">{{ .Name }}</a></li>
+            {{ end }}
+            </ul>
+        {{ end }}
+        <div class="copyright">
+            <p>© {{ if isset .Site.Params "author"}}{{ .Site.Params.author }}, {{end}}{{ now.Year }}<br>
+            {{ i18n "powered" | humanize }} <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, {{ i18n "theme" }} <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            {{ partial "footer-extra.html" . }}
+            </p>  
+        </div> 
+
+        {{ partial "themeSwitcher.html" . }}   
+    </div>
+
+    {{ partial "h-card.html" . }}
+</footer>

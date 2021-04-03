@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlinVersion = '1.3.41'
+    ext.gdxVersion = '1.9.13'
 
     repositories {
         mavenLocal()
@@ -11,6 +12,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
 
     }
 }
@@ -63,3 +65,19 @@ project(":core") {
         api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     }
 }
+
+import com.badlogic.gdx.tools.texturepacker.TexturePacker
+task pack {
+    doLast {
+        // pack settings
+        def settings = new TexturePacker.Settings()
+        settings.maxWidth = 4096
+        settings.maxHeight = 4096
+        settings.alias = false
+        settings.grid = true
+
+        // pack sprites
+        TexturePacker.process(settings, "core/assets/img/sprites/", "core/assets/img/", "sprites")
+    }
+}
+

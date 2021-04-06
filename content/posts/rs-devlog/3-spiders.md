@@ -24,7 +24,7 @@ With that in mind, there are a small handful of variables/stats that each tile h
 
 [In my devlog update from last week](/posts/rs-devlog/2-enemies/) I talked a little bit about tile "hook" methods.  These are empty-bodied methods that every tile has, and they allow for me to easily add custom behavior to different tile types.  The `onPostSlide` hook was put to good use when creating the spider.
 
-The spider tile utilizes both stat tweaks *and* some special custom behavior to make it feel like a spider.  Our primary goal with the spider was we wanted it to leave behind webs. So I overrode the `onPostSlide` hook to get it to leave behind a `WebTile` object whenever it moves (as long as the previous space is always open).  Also, we playtested a little with having the spider slide all the way across the board, and leave a web on each tile it slid over, but that cluttered up the board way too quickly, so we changed its `baseMove` stat to 1.
+The spider tile utilizes both stat tweaks *and* some special custom behavior to make it feel like a spider.  Our primary goal with the spider was we wanted it to leave behind webs. So I overrode the `onPostSlide` hook to get it to leave behind a `WebTile` object whenever it moves (as long as the previous space is still open).  Also, we playtested a little with having the spider slide all the way across the board, and leave a web on each tile it slid over, but that cluttered up the board way too quickly, so we changed its `baseMove` stat to 1.
 
 In addition, we wanted the spider to be dangerous but lightweight.  So the spider does 2 damage when it hits other tiles (as opposed to the goblin's 1 damage), but it only has 3 HP.
 

@@ -30,6 +30,7 @@
         {{ end }}
         <div class="copyright">
             <p>© {{ if isset .Site.Params "author"}}{{ .Site.Params.author }}, {{end}}{{ now.Year }}<br>
+            <a href="https://twitter.com/ramorris_3" target="_blank"><i class="fab fa-twitter-square"></i> @ramorris_3</a><br>
             {{ i18n "powered" | humanize }} <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, {{ i18n "theme" }} <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
             {{ partial "footer-extra.html" . }}
             </p>  

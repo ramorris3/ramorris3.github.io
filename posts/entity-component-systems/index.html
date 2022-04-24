@@ -1,323 +1,324 @@
-<!doctype html><html lang=en-us data-theme><head><meta charset=utf-8><meta name=HandheldFriendly content="True"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=referrer content="no-referrer-when-downgrade"><title>Hybrid Entity Component Systems - Big Ideas for Little Games</title><meta name=description content="Game programming patterns for small, independent teams."><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><script src=https://kit.fontawesome.com/acfeb685d1.js crossorigin=anonymous></script><link rel=stylesheet href=https://littlegames.dev/css/style.1d8233f454bf6bbf46abed7023dbbba557fc4af5f1e39de066ac496c94409622.css integrity="sha256-HYIz9FS/a79Gq+1wI9u7pVf8SvXx453gZqxJbJRAliI="><meta property="og:title" content="Hybrid Entity Component Systems"><meta property="og:description" content="Why (and how) I almost always use Ashley ECS for LibGDX projects."><meta property="og:type" content="article"><meta property="og:url" content="https://littlegames.dev/posts/entity-component-systems/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-04-03T00:00:00+00:00"><meta property="article:modified_time" content="2021-04-03T00:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Hybrid Entity Component Systems"><meta name=twitter:description content="Why (and how) I almost always use Ashley ECS for LibGDX projects."><link href=//cdn-images.mailchimp.com/embedcode/slim-10_7.css rel=stylesheet type=text/css><style type=text/css>#mc_embed_signup{background:#fff;clear:left;font:14px Helvetica,Arial,sans-serif}#mc_embed_signup form{padding-left:0}</style><link rel=stylesheet href=https://littlegames.dev/css/custom.css></head><body><a class=skip-main href=#main>Skip to main content</a><div class=container><header class=common-header><h1 class=site-title><a href=/><i class="fas fa-gamepad"></i> Big Ideas for Little Games</a></h1><nav><a href=https://littlegames.dev/ title>Posts</a>
+<!doctype html><html lang=en-us data-theme><head><meta charset=utf-8><meta name=HandheldFriendly content="True"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=referrer content="no-referrer-when-downgrade"><title>Hybrid Entity Component Systems - Big Ideas for Little Games</title><meta name=description content="Game programming patterns for small, independent teams."><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest href=/site.webmanifest><script src=https://kit.fontawesome.com/acfeb685d1.js crossorigin=anonymous></script>
+<link rel=stylesheet href=https://littlegames.dev/css/style.1d8233f454bf6bbf46abed7023dbbba557fc4af5f1e39de066ac496c94409622.css integrity="sha256-HYIz9FS/a79Gq+1wI9u7pVf8SvXx453gZqxJbJRAliI="><meta property="og:title" content="Hybrid Entity Component Systems"><meta property="og:description" content="Why (and how) I almost always use Ashley ECS for LibGDX projects."><meta property="og:type" content="article"><meta property="og:url" content="https://littlegames.dev/posts/entity-component-systems/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2021-04-03T00:00:00+00:00"><meta property="article:modified_time" content="2021-04-03T00:00:00+00:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="Hybrid Entity Component Systems"><meta name=twitter:description content="Why (and how) I almost always use Ashley ECS for LibGDX projects."><link href=//cdn-images.mailchimp.com/embedcode/slim-10_7.css rel=stylesheet type=text/css><style type=text/css>#mc_embed_signup{background:#fff;clear:left;font:14px Helvetica,Arial,sans-serif}#mc_embed_signup form{padding-left:0}</style><link rel=stylesheet href=https://littlegames.dev/css/custom.css></head><body><a class=skip-main href=#main>Skip to main content</a><div class=container><header class=common-header><h1 class=site-title><a href=/><i class="fas fa-gamepad"></i> Big Ideas for Little Games</a></h1><nav><a href=https://littlegames.dev/ title>Posts</a>
 <a href=https://littlegames.dev/tags/ title>Tags</a>
 <a href=https://littlegames.dev/archive/ title>Archive</a>
-<a href=https://littlegames.dev/about/ title>About</a></nav></header><main id=main tabindex=-1><article class="post h-entry"><header class=post-header><h1 class="p-name post-title">Hybrid Entity Component Systems</h1></header><div class="content e-content"><p>When I&rsquo;m starting a new LibGDX project, I almost always include <a href=https://github.com/libgdx/ashley/wiki>Ashley</a>. However, I don&rsquo;t necessarily use it in the pure, decoupled, bags-o'-data way that most entity-component-system (ECS) libraries were meant to be used.</p><p>Today, I&rsquo;m going to quickly introduce you to ECS&rsquo;s by talking about some of the problems they were built solve. Then, I&rsquo;m going to talk about how I personally adapt the tools of the brilliant Ashley ECS library to fit my project needs in a less conventional way: what I&rsquo;ll refer to as the &ldquo;hybrid&rdquo; approach to using ECS&rsquo;s.</p><h2 id=object-oriented-inheritence-vs-data-driven-composition>Object-Oriented Inheritence vs. Data-Driven Composition</h2><p>I want to briefly go over the high-level idea of ECS&rsquo;s without going too deep. <a href=http://stuffwithstuff.com/>Bob Nystrom</a> gives an in-depth explanation of the component design pattern in his fantastic book, <a href=http://gameprogrammingpatterns.com/><em>Game Programming Patterns</em></a>, which you can read for free online. Please check it out if you want a deeper dive (and a much more eloquent one, at that).</p><p>The Entity Component System design pattern is a decoupling pattern. It&rsquo;s here to help us out when we have a single entity (player, enemy, item, whatever) that wants to span multiple domains of logic, but we don&rsquo;t want those domains to be coupled to one another.</p><h3 id=inheritance-with-a-dry-friendly-base-class>Inheritance With A DRY-Friendly Base Class</h3><p>We&rsquo;ve all written <code>Player</code> classes that are a mile long. If you&rsquo;re writing a simple platformer, then your <code>Player</code> object is going to be similar to your <code>Enemy</code> objects in so many different ways, but just different enough that you might struggle to reuse code.</p><p>You might try to DRY up your code by pulling some of that shared logic &ndash; position, velocity, acceleration, <code>isOnGround</code>, sprite rendering, etc. &ndash; into a base class for both <code>Player</code> and <code>Enemy</code> to inherit from. But depending on the complexity of your code, that might not end up being very readable or maintable.</p><p>You&rsquo;ve got loads of different domains for each entity, and maybe they overlap <em>most</em> of the time across all your game objects, but not all the time. For example, both your player and skeleton entities need to accelerate downwards and collide with platforms, and they both need to be able to move left and right. But your player takes input from a controller to tell it how to move, while the skelly enemies have some kind of AI logic that tells them what to do.</p><p>Let&rsquo;s make it even <em>more</em> difficult by saying you have a ghost enemy that <em>doesn&rsquo;t</em> collide with any platforms &ndash; it just floats through them &ndash; and also <em>doesn&rsquo;t</em> have gravity to pull it downwards. But you still need the system to acknowledge that this ghost is an enemy that can hurt the player, just like the other grounded skeleton enemies. Also, all three entity types cover the &ldquo;draw&rdquo; domain &ndash; they need to be rendered on the screen.</p><p><figure><img src=/entity-component-systems/inheritance.png alt="Illustrated image of complicated inheritance hierarchy with player, skeleton, and ghost"><figcaption>Inheritance can get complicated really quickly.</figcaption></figure></p><h3 id=bags-of-data-and-logical-systems>Bags of Data and Logical Systems</h3><p>ECS&rsquo;s favor composition over inheritance. Rather than creating a generalized inheritance tree of all that shared logic &ndash; and as a result, setting ourselves up to frequently override it in painful ways &ndash; we split each shared domain into its own component class. Our player and enemy entities each own instances of these component classes, but only the ones that are relevant to them.</p><p><figure><img src=/entity-component-systems/components.png alt="Illustrated image of player, skeleton, and ghost classes with components"><figcaption>With components, our game objects become declarative bags o' data.</figcaption></figure></p><p>We still have one problem, though: where does the logic go? We&rsquo;ve moved the input processing into its own component (and that component is now only being used by the player, but not the skelly or the ghost.) But we still need the code that processes input every frame, and we sure as hell don&rsquo;t want to clutter the <code>Player</code> class&rsquo;s <code>update</code> method with it. This problem is even more relevant for components that are going to be used by lots of different entities: for example, the <code>DrawComponent</code> of every single entity that gets drawn to the screen.</p><p>This is where the &ldquo;System&rdquo; part of our Entity Component System comes in: we have a <code>DrawSystem</code> class that says, &ldquo;Hey, I don&rsquo;t care if you&rsquo;re a ghost, skeleton, player, or eggplant &ndash; if you have a <code>DrawComponent</code>, I&rsquo;m gonna draw ya.&rdquo;</p><p><figure><img src=/entity-component-systems/systems.png alt="Illustrated image of logical systems"><figcaption>Systems don't have to be 1-to-1 with components. For example, the physics system can handle movement and collisions differently depending on which components each entity has.</figcaption></figure></p><p>When you break out the domains into components like this, you essentially reduce your game entities to simple bags of data. These little parcels of data flow through a set of manageable and discrete systems in a given order each frame. Each system is only concerned with its domain, and the entities that show up in that system for processing are only those which own components relevant to that same domain (<code>x</code>, <code>y</code> in a <code>PositionComponent</code>, processed by the <code>PhysicsSystem</code>, for example).</p><p>Suddenly your code is decoupled, maintainable, and understandable; if you wanna add physics to an object (or debug a physics issue), you <em>only</em> have to look at physics code. No more digging through a 5,000-line <code>Player.kt</code> file to figure out why the player falls through platforms when they should land on them.</p><h2 id=all-in-with-ecss>All-In With ECS&rsquo;s</h2><p>By now, I&rsquo;ll assume you now have a decent enough high-level understanding of the ECS design pattern to be able to follow along with the code samples. Ashley&rsquo;s API is well-designed enough that you shouldn&rsquo;t have any trouble, even if these concepts are new to you.</p><p>However, if you want more details, check out the <a href=https://github.com/libgdx/ashley/wiki>Ashley documentation on GitHub</a>. (For the following code samples, especially look at the <a href=https://github.com/libgdx/ashley/wiki/How-to-use-Ashley>&ldquo;How to use Ashley&rdquo;</a> and <a href=https://github.com/libgdx/ashley/wiki/Built-in-Entity-Systems>&ldquo;Built in Entity Systems&rdquo;</a> articles.)</p><p>Let&rsquo;s take a look at some Ashley code now. In this example, we&rsquo;ve just been enlightened by the godly, pure, decoupled glory of ECS&rsquo;s and we&rsquo;re going to break <em>everything</em> up:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>PositionComponent</span>(<span style=color:#66d9ef>val</span> x: Float, <span style=color:#66d9ef>val</span> y: Float) : Component
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>VelocityComponent</span>(<span style=color:#66d9ef>val</span> x: Float, <span style=color:#66d9ef>val</span> y: Float) : Component
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MovementSystem</span> : IteratingSystem(
-    Family.all(PositionComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java, VelocityComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
-) {
-	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> pm: ComponentMapper&lt;PositionComponent&gt; = ComponentMapper.getFor(PositionComponent.<span style=color:#66d9ef>class</span>)
-	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> vm: ComponentMapper&lt;VelocityComponent&gt; = ComponentMapper.getFor(VelocityComponent.<span style=color:#66d9ef>class</span>)
-
-	<span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
-        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
-            position: PositionComponent = pm.<span style=color:#66d9ef>get</span>(entity)
-            velocity: VelocityComponent = vm.<span style=color:#66d9ef>get</span>(entity)
-
-            position.x <span style=color:#f92672>+=</span> velocity.x * deltaTime
-		    position.y <span style=color:#f92672>+=</span> velocity.y * deltaTime
-        }
-	}
-}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span>(engine: Engine, x: Float, y: Float) : Entity() {
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = PositionComponent(x, y)
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> velocity = VelocityComponent(<span style=color:#ae81ff>0f</span>, <span style=color:#ae81ff>0f</span>)
-    <span style=color:#75715e>// input component, draw component, etc.
-</span><span style=color:#75715e></span>
-    <span style=color:#66d9ef>init</span> {
-        add(position)
-        add(velocity)
-        engine.addEntity(<span style=color:#66d9ef>this</span>)
-    }
-}
-</code></pre></div><p>This is pretty neat, but your code is going to be a lot more complex than this. You&rsquo;re going to have way more components, and you&rsquo;re going to have way more systems.</p><p>When I first forayed into using Ashley in my projects, I ran into lots of hard-to-debug issues. Usually they stemmed from splitting things up <em>too much</em>: The player wasn&rsquo;t moving when it was supposed to, enemies randomly disappeared off the screen, entities weren&rsquo;t cleaning themselves up when they died, etc.</p><p>When you&rsquo;re the only developer, and you split your logic into dozens of domains, then you have to intimately know all those domains. You have to know which components are going to &ldquo;mark&rdquo; an entity as belonging to a particular system. You might not even think through your domain-splitting enough, and end up with some architectural issues that cause you grief and the need to do a big refactor in the middle of your project.</p><h2 id=the-hybrid-plug-in-and-forget>The Hybrid: Plug In and Forget</h2><p>When you start out with ECS&rsquo;s, you might wring your hands and waste hours trying to figure out the <em>perfect</em> way to split your domains cleanly. How atomic should your components be? Do you have a single <code>BodyComponent</code> with all the physics info for your entities, or do you split it up into <code>PositionComponent</code>, <code>VelocityComponent</code>, etc? Also, is <em>any</em> amount of inheritance ok?</p><p>Of course it&rsquo;s ok. I&rsquo;m giving you permission to quit worrying about all of that. The truth is, you&rsquo;re not here to come up with a perfectly pure, elegant, generic, flawless codebase. You&rsquo;re here to make games! If you have a system that works for you, then run with it. My system happens to combine inheritance trees and an entity component system, and it has worked really well for me in my projects.</p><p>Below, I&rsquo;ll show you what my setup usually looks like when I start a new project. My goals with this hybrid system are to:</p><ol><li>Worry about an entity&rsquo;s frame-by-frame gameplay logic, rather than worrying about managing families of entities.</li><li>Make it super-easy to manage temporary entity states.</li><li>Make it easy for my entities to clean up after themselves when I don&rsquo;t need them anymore.</li></ol><p>It turns out that Ashley gives us a fantastic set of tools to accomplish each of these goals.</p><h2 id=1-plug-and-play-entities>1. Plug-and-Play Entities</h2><p><strong>Goal</strong>: Worry about an entity&rsquo;s frame-by-frame gameplay logic, rather than worrying about managing families of entities.</p><p><strong>Solution</strong>: Isolate each major “slice” of the core game loop in its own system, and then plug the entities into those systems once and forget about them.</p><p> </p><p>If you write a game without Ashley, it will probably look something like this:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Entity</span> {
-    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float)
-    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>()
-}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span> : Entity() {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-        processInput()
-        move()
-        handleCollisions()
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-        drawSprite()
-    }
-
-    <span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Enemy</span> : Entity() {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-        moveTowardsPlayer()
-        handleCollisions()
-    }
-
-    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-        drawSprite()
-    }
-
-    <span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyGame</span> : Game() {
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>lateinit</span> <span style=color:#66d9ef>val</span> batch: SpriteBatch
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> entities: ArrayList&lt;Entity&gt; = listOf()
-    
-    <span style=color:#66d9ef>init</span> {
-        <span style=color:#66d9ef>val</span> p = Player()
-        entities.add(p)
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>create</span>() {
-        batch = SpriteBatch()
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>render</span>(delta: Float) {
-        <span style=color:#66d9ef>if</span> (readyToSpawn()) {
-            <span style=color:#66d9ef>val</span> e = Enemy()
-            entities.add(e)
-        }
-        
-        entities.forEach { <span style=color:#66d9ef>it</span>.update(delta) }
-        batch.begin()
-        entities.forEach { <span style=color:#66d9ef>it</span>.draw() }
-        batch.end()
-    }
-
-    <span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>}
-</code></pre></div><p>This is an incredibly barren example, but it doesn&rsquo;t even address some of the most basic issues that come along with entity management in a game. For example, who should be responsible for adding an entity to the game when it spawns? And who&rsquo;s responsible for removing it when it dies? In what order should we render these entities? And so on.</p><p>Also, this code isn&rsquo;t very declarative. We&rsquo;re writing code that goes into detail about <em>how</em> we&rsquo;re going to update and draw each component, rather than just declaring <em>what</em> each component should do when it&rsquo;s time to update and draw.</p><p>To address these problems, I use Ashley as a sort of plug-and-play solution for my entities. The idea is this: isolate each major &ldquo;slice&rdquo; of the core game loop into its own system, and then plug the entities into those systems and forget about them. (We&rsquo;ll talk about removing them a little bit later.)</p><p>Let&rsquo;s dig in to an example of that same code, but using Ashley to facilitate this new plug-and-play format. First, we&rsquo;ll slice our core game loop into two major domains: update, and draw. We&rsquo;ll need a component and system for each domain.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>Updatable</span> {
-    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float)
-}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateComponent</span> : Component
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateSystem</span> : IteratingSystem(
-    Family.all(UpdateComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
-) {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
-        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Updatable) {
-            entity.update(deltaTime)
-        }
-    }
-}
-
-<span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>Drawable</span> {
-    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>()
-}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawComponent</span>(<span style=color:#66d9ef>val</span> zIndex: Int = <span style=color:#ae81ff>0</span>) : Component
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawSystem</span> : SortedIteratingSystem(
-    Family.all(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>(),
-    ZComparator()
-) {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
-        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Drawable) {
-            entity.draw()
-        }
-    }
-
-    <span style=color:#66d9ef>private</span> static <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ZComparator</span> : Comparator&lt;Entity&gt; {
-		<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> dcm: ComponentMapper&lt;DrawComponent&gt; = ComponentMapper.getFor(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-		
-		<span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>compare</span>(Entity e1, Entity e2) : Int {
-			<span style=color:#66d9ef>return</span> (signum(dcm.<span style=color:#66d9ef>get</span>(e1).zIndex - dcm.<span style=color:#66d9ef>get</span>(e2).zIndex)).toInt();
-		}
-	}
-}
-</code></pre></div><p>For our <code>UpdateSystem</code>, we&rsquo;re just using Ashley&rsquo;s built-in <code>IteratingSystem</code> class. To set this up, all we have to do is specify the components that put an entity in the &ldquo;update&rdquo; family (in this case, it&rsquo;s just the <code>UpdateComponent</code>). After that, we just override <code>processEntity</code>. Also, we&rsquo;re using a simple <code>Updatable</code> interface here to make it easy to call <code>update</code> on any entity that gets gathered up by the <code>UpdateSystem</code> for processing.</p><p>The <code>DrawSystem</code> is the exact same thing, but with one small difference: sorting. Ashley&rsquo;s <code>SortedIteratingSystem</code> behaves exactly the same way as the <code>IteratingSystem</code>, except it takes in a custom entity comparator so that it knows in which order to process the entities. In this case, it&rsquo;s going to sort them based on z-index, and so the player will always be drawn over the top of enemies, should they overlap.</p><p>Now that we&rsquo;ve split up our domains, our entities become much more declarative:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span>(game: Game) : Entity(), Updatable, Drawable {
-    <span style=color:#66d9ef>init</span> {
-        add(UpdateComponent())
-        add(DrawComponent(zIndex = <span style=color:#ae81ff>1</span>))
-        game.engine.addEntity(<span style=color:#66d9ef>this</span>)
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-        processInput()
-        move()
-        handleCollisions()
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-        drawSprite()
-    }
-}
-
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Enemy</span>(game: Game) : Entity(), Updatable, Drawable {
-    <span style=color:#66d9ef>init</span> {
-        add(UpdateComponent())
-        add(DrawComponent())
-        game.engine.addEntity(<span style=color:#66d9ef>this</span>)
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-        moveTowardsPlayer()
-        handleCollisions()
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-        drawSprite()
-    }
-}
-</code></pre></div><p>Our <code>Player</code> and <code>Enemy</code> classes are each saying, &ldquo;Hey, I&rsquo;m updatable, and here&rsquo;s what I do on update. Also, I&rsquo;m drawable, and here&rsquo;s what I draw, and at what z-index.&rdquo; In their <code>init</code> blocks, they register themselves with the core ECS engine, which is a member of the main <code>Game</code> class (see below).</p><p>Our game class becomes pretty simple, too. We instantiate an engine, add the update and draw systems in the order in which we want them to process each frame, and then we simply call <code>engine.update(delta)</code> each frame.</p><p>Notice too that since the Player and Enemy classes are each responsible for registering themselves with the core ECS engine, we don&rsquo;t even need to store any reference to them in our <code>Game</code> class.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyGame</span> : Game() {
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>lateinit</span> <span style=color:#66d9ef>val</span> batch: SpriteBatch
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> engine = Engine()
-    
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>create</span>() {
-        batch = SpriteBatch()
-        engine.addSystem(UpdateSystem())
-        engine.addSystem(DrawSystem())
-        Player(<span style=color:#66d9ef>this</span>)
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>render</span>(delta: Float) {
-        <span style=color:#66d9ef>if</span> (readyToSpawn()) {
-            Enemy(<span style=color:#66d9ef>this</span>)
-        }
-        
-        batch.begin()
-        engine.update(delta)
-        batch.end()
-    }
-
-    <span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>}
-</code></pre></div><p>Our first goal is accomplished. We let Ashley do all the heavy lifting when it comes to registering and processing entities. With all of that entity management logic abstracted away from us, we get to focus almost all of our energy on describing the behavior of each entity via the <code>update</code> and <code>draw</code> methods. We plug them into the core game loop, and then forget about managing them.</p><p>You might think that the verbosity here makes the ECS setup overkill, but it&rsquo;s not too hard to imagine how quickly the <code>Game</code> class could explode in complexity in a real scenario. The more domains you add, the more entity management logic you&rsquo;re writing, and the uglier (and harder to maintain) your <code>Game</code> class gets.</p><h2 id=2-manage-temporary-entity-states>2. Manage Temporary Entity States</h2><p><strong>Goal</strong>: Make it easy to manage temporary entity state without increasing logical complexity in our <code>Entity</code> classes.</p><p><strong>Solution</strong>: Use system-less components as state &ldquo;flags&rdquo; and let the systems handle the state.</p><p> </p><p>So far we&rsquo;ve used Ashley to hook our entities directly into the core game loop without having to worry about managing those entities by hand. But we know that the ECS pattern offers so much more than just categorizing and managing lists of game objects. We&rsquo;re going to use Ashley to manage entity state. To illustrate this, let&rsquo;s look at a simple way to temporarily disable entity processing: the system-less <code>InactiveComponent</code>.</p><p>For this example, let&rsquo;s implement a bullet pool. If you&rsquo;re not familiar with object pooling, the idea is simple: Rather than creating a new bullet object every time the player presses the &ldquo;fire&rdquo; button, you grab an existing bullet from a pool of dormant bullet objects and activate it. When the bullet is done flying (i.e. it collides with something, or flies off the screen), you deactivate it and it goes back into the pool of inactive bullets. This is a pretty common game programming pattern meant to help manage your app&rsquo;s memory usage, and for a garbage-collected language like Kotlin/Java, it can make a world of performance difference.</p><p>I won&rsquo;t go into further detail in this article (I&rsquo;m planning on dedicating a whole blog post to memory management). I&rsquo;ll just say that LibGDX has really great built-in support for object pooling, and that you can read up on it by going to the <a href=https://github.com/libgdx/libgdx/wiki/Memory-management>Memory Management page on the LibGDX wiki</a>.</p><p>So let&rsquo;s create an object pool of bullets and plug those bullets in to the core update/draw loop just like we did with enemies above.</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BulletManager</span>(<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> engine: Engine) {
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> bulletPool = <span style=color:#66d9ef>object</span>: Pool&lt;Bullet&gt;() {
-        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>newObject</span>() = Bullet()
-    }
-
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>inner</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Bullet</span> : Entity(), Pool.Poolable, Updatable, Drawable {
-        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>var</span> alive = <span style=color:#66d9ef>false</span>
-        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = Vector2()
-
-        <span style=color:#66d9ef>init</span> {
-            add(UpdateComponent())
-            add(DrawComponent())
-            engine.addEntity(<span style=color:#66d9ef>this</span>)
-        }
-
-        <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>revive</span>(x: Float, y: Float) {
-            alive = <span style=color:#66d9ef>true</span>
-            position.<span style=color:#66d9ef>set</span>(x, y)
-        }
-
-        <span style=color:#75715e>// method required by Pool.Poolable
-</span><span style=color:#75715e></span>        <span style=color:#75715e>// this gets called when the object is &#34;freed&#34; back into the object pool
-</span><span style=color:#75715e></span>        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>reset</span>() {
-            alive = <span style=color:#66d9ef>false</span>
-        }
-
-        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-            <span style=color:#66d9ef>if</span> (alive) {
-                y <span style=color:#f92672>+=</span> delta * <span style=color:#ae81ff>100f</span>
-                <span style=color:#66d9ef>if</span> (offScreen() <span style=color:#f92672>||</span> collided()) {
-                    bulletPool.free(<span style=color:#66d9ef>this</span>)
-                }
-            }
-        }
-
-        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-            <span style=color:#66d9ef>if</span> (alive) {
-                drawSprite()
-            }
-        }
-    }
-
-    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>fireBullet</span>(x: Float, y: Float) {
-        <span style=color:#66d9ef>val</span> b = bulletPool.obtain()
-        b.revive(x, y)
-    }
-}
-</code></pre></div><p>So in this example we have a <code>BulletManager</code> class that encapsulates the object pool. The rest of our codebase doesn&rsquo;t really need to know about the actual <code>Bullet</code> class that represents a single bullet. It can be used like this in the <code>Player</code> class:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#75715e>// in init
-</span><span style=color:#75715e></span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> bullets = BulletManager(engine)
-
-<span style=color:#75715e>// in update()
-</span><span style=color:#75715e></span><span style=color:#66d9ef>if</span> (fireButtonPressed) {
-    bullets.fireBullet(position.x, position.y)
-}
-</code></pre></div><p><figure><img src=/entity-component-systems/bullet-hell.gif alt="Animated GIF of 2D space shooter game"><figcaption>When you're spawning bullets this frequently, you don't want to create brand new instances in memory every single time a bullet is fired.</figcaption></figure></p><p>Each individual bullet acts exactly like any other entity in our system so far. It hooks into the game&rsquo;s core loop by registering with the ECS engine, and then it updates itself and draws itself when asked to do so. The only difference here is that it <em>conditionally</em> updates and draws, only when it&rsquo;s alive.</p><p>It doesn&rsquo;t feel great to wrap entire methods in the <code>if (alive)</code> conditional. In this simple example, that&rsquo;s somewhat manageable, but what if there are other domains of logic that we want to only apply to <code>alive</code> objects? For example, instead of calling <code>handleCollision()</code> in our entities' <code>update</code> methods, let&rsquo;s say we have a <code>PhysicsSystem</code> that groups entities together by collision category and then handles all the collision checking for us. Suddenly your bullets and everything else that they collide with need to know about that <code>alive</code> state, and check it before collisions are processed.</p><p>To solve this, we&rsquo;ll introduce a new component called <code>InactiveComponent</code> and just use it as a sort of flag for our ECS engine. Any systems that process entities will simply ignore any entities with an <code>InactiveComponent</code> attached to them.</p><p>First, we&rsquo;ll replace the <code>alive</code> boolean in the <code>Bullet</code> class with that new inactive flag component:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>inner</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Bullet</span> : Entity(), Pool.Poolable, Updatable, Drawable {
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> inactive = InactiveComponent()
-    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = Vector2()
-
-    <span style=color:#66d9ef>init</span> {
-        add(inactive)
-        add(UpdateComponent())
-        add(DrawComponent())
-        engine.addEntity(<span style=color:#66d9ef>this</span>)
-    }
-
-    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>revive</span>(x: Float, y: Float) {
-        remove(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-        position.<span style=color:#66d9ef>set</span>(x, y)
-    }
-
-    <span style=color:#75715e>// method required by Pool.Poolable
-</span><span style=color:#75715e></span>    <span style=color:#75715e>// this gets called when the object is &#34;freed&#34; back into the object pool
-</span><span style=color:#75715e></span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>reset</span>() {
-        add(inactive)
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
-        y <span style=color:#f92672>+=</span> delta * <span style=color:#ae81ff>100f</span>
-        <span style=color:#66d9ef>if</span> (offScreen() <span style=color:#f92672>||</span> collided()) {
-            bulletPool.free(<span style=color:#66d9ef>this</span>)
-        }
-    }
-
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
-        drawSprite()
-    }
-}
-</code></pre></div><p>The code hasn&rsquo;t changed really at all. The only two differences are we&rsquo;re adding/removing the <code>InactiveComponent</code> instead of flipping a boolean switch, and we&rsquo;ve removed the conditional from the update/draw methods.</p><p>Now, let&rsquo;s change the way our <code>UpdateSystem</code> and <code>DrawSystem</code> collect entities for processing. They&rsquo;ll now exclude any entity with an <code>InactiveComponent</code>:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateSystem</span> : IteratingSystem(
-    Family
-        .all(UpdateComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-        .exclude(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-        .<span style=color:#66d9ef>get</span>()
-) {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
-        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Updatable) {
-            entity.update(deltaTime)
-        }
-    }
-}
-
-<span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>
-<span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawSystem</span> : SortedIteratingSystem(
-    Family
-        .all(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-        .exclude(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
-        .<span style=color:#66d9ef>get</span>(),
-    ZComparator()
-) {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
-        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Drawable) {
-            entity.draw()
-        }
-    }
-
-    <span style=color:#66d9ef>private</span> static <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ZComparator</span> : Comparator&lt;Entity&gt; {
-        <span style=color:#75715e>// ...
-</span><span style=color:#75715e></span>	}
-}
-</code></pre></div><p>You might have expected us to manually need to check for the existence of the <code>InactiveComponent</code> on the entities within the <code>processEntity</code> method. But the solution is much cleaner: we simply use <code>Family.exclude</code> in the system&rsquo;s constructor, and Ashley takes care of the rest for us.</p><p>This was a simple example, but there are lots of other ways you can use components to mix and match different pieces of state for your entities. Here are some ideas (and you&rsquo;ll see some of these in action within the <a href=https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/hybrid-ecs>sample project for this article</a>):</p><ul><li>Add a <code>HitStunComponent</code> whenever an enemy gets hit. This component doesn&rsquo;t stop the <code>DrawSystem</code> from rendering them, but it stops the <code>UpdateSystem</code> from updating them. Add a barebones <code>HitStunSystem</code> which decrements a countdown on the <code>HitStunComponent</code>, and when the countdown finished, remove the component from the entity.</li><li>Create a <code>FlashComponent</code> with a boolean <code>isDrawing</code> and a countdown timer. In the <code>DrawSystem</code>, only draw entities who either don&rsquo;t have a flash component, or whose flash component&rsquo;s <code>isDrawing</code> is <code>true</code>. Add a barebones <code>FlashSystem</code> which decrements the countdown on the <code>FlashComponent</code> and removes it from the entity when the countdown is done.</li><li>Add a <code>FrozenComponent</code> to enemies that get hit with a freeze gun. This excludes them from the <code>UpdateSystem</code>, but keeps them in the collision-checking <code>PhysicsSystem</code>, and continues to include them in the rendering of <code>DrawSystem</code>. The <code>DrawSystem</code> could also draw them with a special blue-tint shader if it sees a <code>FrozenComponent</code>.</li></ul><p>You can get pretty creative with it, so go crazy.</p><p>That takes care of our second goal. Our core game loop logic within each entity is still clean and simple, and we don&rsquo;t have to worry about a bunch of state as it pertains to entity management. We just let the systems take care of all of that.</p><h2 id=3-entity-clean-up>3. Entity Clean-Up</h2><p><strong>Goal</strong>: Make it easy for my entities to clean up after themselves when I don&rsquo;t need them anymore.</p><p><strong>Solution</strong>: Use <code>engine.removeEntity(entity)</code>, and Ashley takes care of that for you. In some special cases, use an <code>EntityListener</code> to handle the <code>entityRemoved</code> event for other non-ECS cleanup logic.</p><p> </p><p>So we&rsquo;ve talked about how to temporarily remove entities from our ECS engine by excluding them from certain systems. But what do we do when it&rsquo;s time to remove them from the system altogether? For example, what happens to an enemy when you kill it, or an item when you pick it up?</p><p>If we&rsquo;re only concerned with removing something from the engine, then Ashley already has us covered there: simply call <code>engine.removeEntity(entity)</code>. This will schedule the entity for removal, meaning it won&rsquo;t be gathered by any of your systems. Then, once the engine finishes its processing for that frame, it&rsquo;ll remove the entity from its internal list of entities.</p><p>Often that will be all you need. But there <em>are</em> times when you need to be able to handle some other kind of general cleanup logic for each entity as you remove it from your ECS engine. And in that case, you don&rsquo;t want to couple that cleanup in a way that requires you remember to do it every time you call <code>engine.removeEntity(entity)</code>.</p><p>With Ashley, we can register event listeners with our engine and let the cleanup logic happen in there. We set this up one time and register it with the ECS engine, then forget about it. This means we can plug our entities into the engine when we want, remove them when we need to, and forget about all the related logic that needs to execute whenever we remove entities from our game.</p><p>As a simple example, let&rsquo;s say that you&rsquo;re using <a href=https://github.com/libgdx/libgdx/wiki/Box2d>Box2D</a> for your physics. If so, all of your physical entities are going to plug in to your Box2D <code>World</code>, so they&rsquo;ll be referenced and managed in two places: in your Ashley <code>engine</code> and in your Box2D <code>world</code>.</p><p>In this case, you&rsquo;ll need to remove the Box2D body from your game when its related entity is removed from the Ashley engine. Otherwise, you&rsquo;ll have entities which aren&rsquo;t updating or rendering, but which are still colliding and interacting with the other physical objects in your game.</p><p>Ashley makes this simple:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#66d9ef>val</span> physicsFamily = Family.all(PhysicsComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
-<span style=color:#66d9ef>val</span> physicsListener = <span style=color:#66d9ef>object</span> <span style=color:#960050;background-color:#1e0010>: </span><span style=color:#a6e22e>EntityListener</span> {
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>entityAdded</span>(entity: Entity?) {
-        <span style=color:#75715e>// get BodyComponent from entity, 
-</span><span style=color:#75715e></span>        <span style=color:#75715e>// use it to add physics body to Box2D world
-</span><span style=color:#75715e></span>    }
-    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>entityRemoved</span>(entity: Entity?) {
-        <span style=color:#75715e>// get BodyComponent from entity, 
-</span><span style=color:#75715e></span>        <span style=color:#75715e>// use it to remove physics body from Box2D world
-</span><span style=color:#75715e></span>    }
-}
-engine.addEntityListener(physicsFamily, physicsListener)
-</code></pre></div><p>Notice that I&rsquo;m talking mostly about entity cleanup here, but that the entity listener feature of Ashley solves this broader problem of coupling between multiple systems outside of our ECS engine. In the example above, we demonstrate how we not only remove the physics body from our <code>world</code> when it&rsquo;s removed from our core ECS <code>engine</code>, but also <em>add</em> it to the <code>world</code> when we first register it with our ECS <code>engine</code>.</p><h2 id=conclusion>Conclusion</h2><p>To recap:</p><ul><li>Entity Component Systems (ECS&rsquo;s) solve coupling problems that inheritance often isn&rsquo;t as well-equipped to solve.</li><li>ECS&rsquo;s can make your game logic harder to reason with if you swing your pendulum too hard in the &ldquo;split-up domains&rdquo; direction.</li><li>With our &ldquo;hybrid&rdquo; approach, we can use Ashley&rsquo;s tools to manage our entities in a meaningful way without over-engineering.</li><li>With the hybrid approach, we get to plug our entities into the core game loop and then forget about them.</li><li>We can also use Ashley to manage temporal state for our entities in a self-contained way without blowing up the logical complexity of our entity classes.</li><li>When it&rsquo;s time to remove entities from our ECS engine, we can use <code>EntityListener</code> objects to execute logic that needs to happen on entity removal in an isolated way &ndash; again, without complicating our entity classes too much.</li></ul><p>Thanks for joining me. If you want to look at an example project, I&rsquo;ve created a small arcade shooter that demonstrates my hybrid ECS setup. You can check out <a href=https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/hybrid-ecs>the complete source code here on GitHub</a>.</p></div><div class=post-info><div class="post-date dt-published">2021-04-03</div><a class="post-hidden-url u-url" href=https://littlegames.dev/posts/entity-component-systems/>https://littlegames.dev/posts/entity-component-systems/</a>
-<a href=https://littlegames.dev class="p-name p-author post-hidden-author h-card" rel=me>Alex Morris</a><div class=post-taxonomies><ul class=post-tags><li><a href=https://littlegames.dev/tags/ashley-ecs>#ashley ecs</a></li><li><a href=https://littlegames.dev/tags/libgdx>#libgdx</a></li><li><a href=https://littlegames.dev/tags/sample-project>#sample project</a></li><li><a href=https://littlegames.dev/tags/shmup>#shmup</a></li></ul></div></div></article><div class="pagination post-pagination"><div class="left pagination-item"><a href=/posts/rs-devlog/3-spiders/>Make-it Monday: Rogueslide Devlog #3</a></div><div class="right pagination-item"><a href=/posts/rs-devlog/2-enemies/>Make-it Monday: Rogueslide Devlog #2</a></div></div></main><footer class=common-footer><div id=mc_embed_signup><form action="https://dev.us1.list-manage.com/subscribe/post?u=515a1fe97dd6c90c23716c5b0&id=8a228e0da4" method=post id=mc-embedded-subscribe-form name=mc-embedded-subscribe-form class=validate target=_blank novalidate><div id=mc_embed_signup_scroll><input type=email name=EMAIL class=email id=mce-EMAIL placeholder="Email address" required><div style=position:absolute;left:-5000px aria-hidden=true><input type=text name=b_515a1fe97dd6c90c23716c5b0_8a228e0da4 tabindex=-1></div><div class=clear><input type=submit value=Subscribe name=subscribe id=mc-embedded-subscribe class=button></div></div></form></div><div class=common-footer-bottom><div class=copyright><p>© Alex Morris, 2021<br><a href=https://twitter.com/ramorris_3 target=_blank><i class="fab fa-twitter-square"></i> @ramorris_3</a><br>Powered by <a target=_blank rel="noopener noreferrer" href=https://gohugo.io/>Hugo</a>, theme <a target=_blank rel="noopener noreferrer" href=https://github.com/mitrichius/hugo-theme-anubis>Anubis</a>.<br></p></div></div><p class="h-card vcard"><a href=https://littlegames.dev class="p-name u-url url fn" rel=me>Alex Morris</a></p></footer></div></body></html>
+<a href=https://littlegames.dev/about/ title>About</a></nav></header><main id=main tabindex=-1><article class="post h-entry"><header class=post-header><h1 class="p-name post-title">Hybrid Entity Component Systems</h1></header><div class="content e-content"><p>When I&rsquo;m starting a new LibGDX project, I almost always include <a href=https://github.com/libgdx/ashley/wiki>Ashley</a>. However, I don&rsquo;t necessarily use it in the pure, decoupled, bags-o&rsquo;-data way that most entity-component-system (ECS) libraries were meant to be used.</p><p>Today, I&rsquo;m going to quickly introduce you to ECS&rsquo;s by talking about some of the problems they were built solve. Then, I&rsquo;m going to talk about how I personally adapt the tools of the brilliant Ashley ECS library to fit my project needs in a less conventional way: what I&rsquo;ll refer to as the &ldquo;hybrid&rdquo; approach to using ECS&rsquo;s.</p><h2 id=object-oriented-inheritence-vs-data-driven-composition>Object-Oriented Inheritence vs. Data-Driven Composition</h2><p>I want to briefly go over the high-level idea of ECS&rsquo;s without going too deep. <a href=http://stuffwithstuff.com/>Bob Nystrom</a> gives an in-depth explanation of the component design pattern in his fantastic book, <a href=http://gameprogrammingpatterns.com/><em>Game Programming Patterns</em></a>, which you can read for free online. Please check it out if you want a deeper dive (and a much more eloquent one, at that).</p><p>The Entity Component System design pattern is a decoupling pattern. It&rsquo;s here to help us out when we have a single entity (player, enemy, item, whatever) that wants to span multiple domains of logic, but we don&rsquo;t want those domains to be coupled to one another.</p><h3 id=inheritance-with-a-dry-friendly-base-class>Inheritance With A DRY-Friendly Base Class</h3><p>We&rsquo;ve all written <code>Player</code> classes that are a mile long. If you&rsquo;re writing a simple platformer, then your <code>Player</code> object is going to be similar to your <code>Enemy</code> objects in so many different ways, but just different enough that you might struggle to reuse code.</p><p>You might try to DRY up your code by pulling some of that shared logic &ndash; position, velocity, acceleration, <code>isOnGround</code>, sprite rendering, etc. &ndash; into a base class for both <code>Player</code> and <code>Enemy</code> to inherit from. But depending on the complexity of your code, that might not end up being very readable or maintable.</p><p>You&rsquo;ve got loads of different domains for each entity, and maybe they overlap <em>most</em> of the time across all your game objects, but not all the time. For example, both your player and skeleton entities need to accelerate downwards and collide with platforms, and they both need to be able to move left and right. But your player takes input from a controller to tell it how to move, while the skelly enemies have some kind of AI logic that tells them what to do.</p><p>Let&rsquo;s make it even <em>more</em> difficult by saying you have a ghost enemy that <em>doesn&rsquo;t</em> collide with any platforms &ndash; it just floats through them &ndash; and also <em>doesn&rsquo;t</em> have gravity to pull it downwards. But you still need the system to acknowledge that this ghost is an enemy that can hurt the player, just like the other grounded skeleton enemies. Also, all three entity types cover the &ldquo;draw&rdquo; domain &ndash; they need to be rendered on the screen.</p><p><figure><img src=/entity-component-systems/inheritance.png alt="Illustrated image of complicated inheritance hierarchy with player, skeleton, and ghost"><figcaption>Inheritance can get complicated really quickly.</figcaption></figure></p><h3 id=bags-of-data-and-logical-systems>Bags of Data and Logical Systems</h3><p>ECS&rsquo;s favor composition over inheritance. Rather than creating a generalized inheritance tree of all that shared logic &ndash; and as a result, setting ourselves up to frequently override it in painful ways &ndash; we split each shared domain into its own component class. Our player and enemy entities each own instances of these component classes, but only the ones that are relevant to them.</p><p><figure><img src=/entity-component-systems/components.png alt="Illustrated image of player, skeleton, and ghost classes with components"><figcaption>With components, our game objects become declarative bags o' data.</figcaption></figure></p><p>We still have one problem, though: where does the logic go? We&rsquo;ve moved the input processing into its own component (and that component is now only being used by the player, but not the skelly or the ghost.) But we still need the code that processes input every frame, and we sure as hell don&rsquo;t want to clutter the <code>Player</code> class&rsquo;s <code>update</code> method with it. This problem is even more relevant for components that are going to be used by lots of different entities: for example, the <code>DrawComponent</code> of every single entity that gets drawn to the screen.</p><p>This is where the &ldquo;System&rdquo; part of our Entity Component System comes in: we have a <code>DrawSystem</code> class that says, &ldquo;Hey, I don&rsquo;t care if you&rsquo;re a ghost, skeleton, player, or eggplant &ndash; if you have a <code>DrawComponent</code>, I&rsquo;m gonna draw ya.&rdquo;</p><p><figure><img src=/entity-component-systems/systems.png alt="Illustrated image of logical systems"><figcaption>Systems don't have to be 1-to-1 with components. For example, the physics system can handle movement and collisions differently depending on which components each entity has.</figcaption></figure></p><p>When you break out the domains into components like this, you essentially reduce your game entities to simple bags of data. These little parcels of data flow through a set of manageable and discrete systems in a given order each frame. Each system is only concerned with its domain, and the entities that show up in that system for processing are only those which own components relevant to that same domain (<code>x</code>, <code>y</code> in a <code>PositionComponent</code>, processed by the <code>PhysicsSystem</code>, for example).</p><p>Suddenly your code is decoupled, maintainable, and understandable; if you wanna add physics to an object (or debug a physics issue), you <em>only</em> have to look at physics code. No more digging through a 5,000-line <code>Player.kt</code> file to figure out why the player falls through platforms when they should land on them.</p><h2 id=all-in-with-ecss>All-In With ECS&rsquo;s</h2><p>By now, I&rsquo;ll assume you now have a decent enough high-level understanding of the ECS design pattern to be able to follow along with the code samples. Ashley&rsquo;s API is well-designed enough that you shouldn&rsquo;t have any trouble, even if these concepts are new to you.</p><p>However, if you want more details, check out the <a href=https://github.com/libgdx/ashley/wiki>Ashley documentation on GitHub</a>. (For the following code samples, especially look at the <a href=https://github.com/libgdx/ashley/wiki/How-to-use-Ashley>&ldquo;How to use Ashley&rdquo;</a> and <a href=https://github.com/libgdx/ashley/wiki/Built-in-Entity-Systems>&ldquo;Built in Entity Systems&rdquo;</a> articles.)</p><p>Let&rsquo;s take a look at some Ashley code now. In this example, we&rsquo;ve just been enlightened by the godly, pure, decoupled glory of ECS&rsquo;s and we&rsquo;re going to break <em>everything</em> up:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>PositionComponent</span>(<span style=color:#66d9ef>val</span> x: Float, <span style=color:#66d9ef>val</span> y: Float) : Component
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>VelocityComponent</span>(<span style=color:#66d9ef>val</span> x: Float, <span style=color:#66d9ef>val</span> y: Float) : Component
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MovementSystem</span> : IteratingSystem(
+</span></span><span style=display:flex><span>    Family.all(PositionComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java, VelocityComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> pm: ComponentMapper&lt;PositionComponent&gt; = ComponentMapper.getFor(PositionComponent.<span style=color:#66d9ef>class</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> vm: ComponentMapper&lt;VelocityComponent&gt; = ComponentMapper.getFor(VelocityComponent.<span style=color:#66d9ef>class</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            position: PositionComponent = pm.<span style=color:#66d9ef>get</span>(entity)
+</span></span><span style=display:flex><span>            velocity: VelocityComponent = vm.<span style=color:#66d9ef>get</span>(entity)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            position.x <span style=color:#f92672>+=</span> velocity.x * deltaTime
+</span></span><span style=display:flex><span>		    position.y <span style=color:#f92672>+=</span> velocity.y * deltaTime
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span>(engine: Engine, x: Float, y: Float) : Entity() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = PositionComponent(x, y)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> velocity = VelocityComponent(<span style=color:#ae81ff>0f</span>, <span style=color:#ae81ff>0f</span>)
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// input component, draw component, etc.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>        add(position)
+</span></span><span style=display:flex><span>        add(velocity)
+</span></span><span style=display:flex><span>        engine.addEntity(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>This is pretty neat, but your code is going to be a lot more complex than this. You&rsquo;re going to have way more components, and you&rsquo;re going to have way more systems.</p><p>When I first forayed into using Ashley in my projects, I ran into lots of hard-to-debug issues. Usually they stemmed from splitting things up <em>too much</em>: The player wasn&rsquo;t moving when it was supposed to, enemies randomly disappeared off the screen, entities weren&rsquo;t cleaning themselves up when they died, etc.</p><p>When you&rsquo;re the only developer, and you split your logic into dozens of domains, then you have to intimately know all those domains. You have to know which components are going to &ldquo;mark&rdquo; an entity as belonging to a particular system. You might not even think through your domain-splitting enough, and end up with some architectural issues that cause you grief and the need to do a big refactor in the middle of your project.</p><h2 id=the-hybrid-plug-in-and-forget>The Hybrid: Plug In and Forget</h2><p>When you start out with ECS&rsquo;s, you might wring your hands and waste hours trying to figure out the <em>perfect</em> way to split your domains cleanly. How atomic should your components be? Do you have a single <code>BodyComponent</code> with all the physics info for your entities, or do you split it up into <code>PositionComponent</code>, <code>VelocityComponent</code>, etc? Also, is <em>any</em> amount of inheritance ok?</p><p>Of course it&rsquo;s ok. I&rsquo;m giving you permission to quit worrying about all of that. The truth is, you&rsquo;re not here to come up with a perfectly pure, elegant, generic, flawless codebase. You&rsquo;re here to make games! If you have a system that works for you, then run with it. My system happens to combine inheritance trees and an entity component system, and it has worked really well for me in my projects.</p><p>Below, I&rsquo;ll show you what my setup usually looks like when I start a new project. My goals with this hybrid system are to:</p><ol><li>Worry about an entity&rsquo;s frame-by-frame gameplay logic, rather than worrying about managing families of entities.</li><li>Make it super-easy to manage temporary entity states.</li><li>Make it easy for my entities to clean up after themselves when I don&rsquo;t need them anymore.</li></ol><p>It turns out that Ashley gives us a fantastic set of tools to accomplish each of these goals.</p><h2 id=1-plug-and-play-entities>1. Plug-and-Play Entities</h2><p><strong>Goal</strong>: Worry about an entity&rsquo;s frame-by-frame gameplay logic, rather than worrying about managing families of entities.</p><p><strong>Solution</strong>: Isolate each major “slice” of the core game loop in its own system, and then plug the entities into those systems once and forget about them.</p><p> </p><p>If you write a game without Ashley, it will probably look something like this:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Entity</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>abstract</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>()
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span> : Entity() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>        processInput()
+</span></span><span style=display:flex><span>        move()
+</span></span><span style=display:flex><span>        handleCollisions()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>        drawSprite()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Enemy</span> : Entity() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>        moveTowardsPlayer()
+</span></span><span style=display:flex><span>        handleCollisions()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>        drawSprite()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyGame</span> : Game() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>lateinit</span> <span style=color:#66d9ef>val</span> batch: SpriteBatch
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> entities: ArrayList&lt;Entity&gt; = listOf()
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>val</span> p = Player()
+</span></span><span style=display:flex><span>        entities.add(p)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>create</span>() {
+</span></span><span style=display:flex><span>        batch = SpriteBatch()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>render</span>(delta: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (readyToSpawn()) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>val</span> e = Enemy()
+</span></span><span style=display:flex><span>            entities.add(e)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        
+</span></span><span style=display:flex><span>        entities.forEach { <span style=color:#66d9ef>it</span>.update(delta) }
+</span></span><span style=display:flex><span>        batch.begin()
+</span></span><span style=display:flex><span>        entities.forEach { <span style=color:#66d9ef>it</span>.draw() }
+</span></span><span style=display:flex><span>        batch.end()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>This is an incredibly barren example, but it doesn&rsquo;t even address some of the most basic issues that come along with entity management in a game. For example, who should be responsible for adding an entity to the game when it spawns? And who&rsquo;s responsible for removing it when it dies? In what order should we render these entities? And so on.</p><p>Also, this code isn&rsquo;t very declarative. We&rsquo;re writing code that goes into detail about <em>how</em> we&rsquo;re going to update and draw each component, rather than just declaring <em>what</em> each component should do when it&rsquo;s time to update and draw.</p><p>To address these problems, I use Ashley as a sort of plug-and-play solution for my entities. The idea is this: isolate each major &ldquo;slice&rdquo; of the core game loop into its own system, and then plug the entities into those systems and forget about them. (We&rsquo;ll talk about removing them a little bit later.)</p><p>Let&rsquo;s dig in to an example of that same code, but using Ashley to facilitate this new plug-and-play format. First, we&rsquo;ll slice our core game loop into two major domains: update, and draw. We&rsquo;ll need a component and system for each domain.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>Updatable</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float)
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateComponent</span> : Component
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateSystem</span> : IteratingSystem(
+</span></span><span style=display:flex><span>    Family.all(UpdateComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Updatable) {
+</span></span><span style=display:flex><span>            entity.update(deltaTime)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>Drawable</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>()
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawComponent</span>(<span style=color:#66d9ef>val</span> zIndex: Int = <span style=color:#ae81ff>0</span>) : Component
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawSystem</span> : SortedIteratingSystem(
+</span></span><span style=display:flex><span>    Family.all(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>(),
+</span></span><span style=display:flex><span>    ZComparator()
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Drawable) {
+</span></span><span style=display:flex><span>            entity.draw()
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> static <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ZComparator</span> : Comparator&lt;Entity&gt; {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> dcm: ComponentMapper&lt;DrawComponent&gt; = ComponentMapper.getFor(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>		
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>compare</span>(Entity e1, Entity e2) : Int {
+</span></span><span style=display:flex><span>			<span style=color:#66d9ef>return</span> (signum(dcm.<span style=color:#66d9ef>get</span>(e1).zIndex - dcm.<span style=color:#66d9ef>get</span>(e2).zIndex)).toInt();
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>For our <code>UpdateSystem</code>, we&rsquo;re just using Ashley&rsquo;s built-in <code>IteratingSystem</code> class. To set this up, all we have to do is specify the components that put an entity in the &ldquo;update&rdquo; family (in this case, it&rsquo;s just the <code>UpdateComponent</code>). After that, we just override <code>processEntity</code>. Also, we&rsquo;re using a simple <code>Updatable</code> interface here to make it easy to call <code>update</code> on any entity that gets gathered up by the <code>UpdateSystem</code> for processing.</p><p>The <code>DrawSystem</code> is the exact same thing, but with one small difference: sorting. Ashley&rsquo;s <code>SortedIteratingSystem</code> behaves exactly the same way as the <code>IteratingSystem</code>, except it takes in a custom entity comparator so that it knows in which order to process the entities. In this case, it&rsquo;s going to sort them based on z-index, and so the player will always be drawn over the top of enemies, should they overlap.</p><p>Now that we&rsquo;ve split up our domains, our entities become much more declarative:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Player</span>(game: Game) : Entity(), Updatable, Drawable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>        add(UpdateComponent())
+</span></span><span style=display:flex><span>        add(DrawComponent(zIndex = <span style=color:#ae81ff>1</span>))
+</span></span><span style=display:flex><span>        game.engine.addEntity(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>        processInput()
+</span></span><span style=display:flex><span>        move()
+</span></span><span style=display:flex><span>        handleCollisions()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>        drawSprite()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Enemy</span>(game: Game) : Entity(), Updatable, Drawable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>        add(UpdateComponent())
+</span></span><span style=display:flex><span>        add(DrawComponent())
+</span></span><span style=display:flex><span>        game.engine.addEntity(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>        moveTowardsPlayer()
+</span></span><span style=display:flex><span>        handleCollisions()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>        drawSprite()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Our <code>Player</code> and <code>Enemy</code> classes are each saying, &ldquo;Hey, I&rsquo;m updatable, and here&rsquo;s what I do on update. Also, I&rsquo;m drawable, and here&rsquo;s what I draw, and at what z-index.&rdquo; In their <code>init</code> blocks, they register themselves with the core ECS engine, which is a member of the main <code>Game</code> class (see below).</p><p>Our game class becomes pretty simple, too. We instantiate an engine, add the update and draw systems in the order in which we want them to process each frame, and then we simply call <code>engine.update(delta)</code> each frame.</p><p>Notice too that since the Player and Enemy classes are each responsible for registering themselves with the core ECS engine, we don&rsquo;t even need to store any reference to them in our <code>Game</code> class.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>MyGame</span> : Game() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>lateinit</span> <span style=color:#66d9ef>val</span> batch: SpriteBatch
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> engine = Engine()
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>create</span>() {
+</span></span><span style=display:flex><span>        batch = SpriteBatch()
+</span></span><span style=display:flex><span>        engine.addSystem(UpdateSystem())
+</span></span><span style=display:flex><span>        engine.addSystem(DrawSystem())
+</span></span><span style=display:flex><span>        Player(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>render</span>(delta: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (readyToSpawn()) {
+</span></span><span style=display:flex><span>            Enemy(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        
+</span></span><span style=display:flex><span>        batch.begin()
+</span></span><span style=display:flex><span>        engine.update(delta)
+</span></span><span style=display:flex><span>        batch.end()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>Our first goal is accomplished. We let Ashley do all the heavy lifting when it comes to registering and processing entities. With all of that entity management logic abstracted away from us, we get to focus almost all of our energy on describing the behavior of each entity via the <code>update</code> and <code>draw</code> methods. We plug them into the core game loop, and then forget about managing them.</p><p>You might think that the verbosity here makes the ECS setup overkill, but it&rsquo;s not too hard to imagine how quickly the <code>Game</code> class could explode in complexity in a real scenario. The more domains you add, the more entity management logic you&rsquo;re writing, and the uglier (and harder to maintain) your <code>Game</code> class gets.</p><h2 id=2-manage-temporary-entity-states>2. Manage Temporary Entity States</h2><p><strong>Goal</strong>: Make it easy to manage temporary entity state without increasing logical complexity in our <code>Entity</code> classes.</p><p><strong>Solution</strong>: Use system-less components as state &ldquo;flags&rdquo; and let the systems handle the state.</p><p> </p><p>So far we&rsquo;ve used Ashley to hook our entities directly into the core game loop without having to worry about managing those entities by hand. But we know that the ECS pattern offers so much more than just categorizing and managing lists of game objects. We&rsquo;re going to use Ashley to manage entity state. To illustrate this, let&rsquo;s look at a simple way to temporarily disable entity processing: the system-less <code>InactiveComponent</code>.</p><p>For this example, let&rsquo;s implement a bullet pool. If you&rsquo;re not familiar with object pooling, the idea is simple: Rather than creating a new bullet object every time the player presses the &ldquo;fire&rdquo; button, you grab an existing bullet from a pool of dormant bullet objects and activate it. When the bullet is done flying (i.e. it collides with something, or flies off the screen), you deactivate it and it goes back into the pool of inactive bullets. This is a pretty common game programming pattern meant to help manage your app&rsquo;s memory usage, and for a garbage-collected language like Kotlin/Java, it can make a world of performance difference.</p><p>I won&rsquo;t go into further detail in this article (I&rsquo;m planning on dedicating a whole blog post to memory management). I&rsquo;ll just say that LibGDX has really great built-in support for object pooling, and that you can read up on it by going to the <a href=https://github.com/libgdx/libgdx/wiki/Memory-management>Memory Management page on the LibGDX wiki</a>.</p><p>So let&rsquo;s create an object pool of bullets and plug those bullets in to the core update/draw loop just like we did with enemies above.</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>BulletManager</span>(<span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> engine: Engine) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> bulletPool = <span style=color:#66d9ef>object</span>: Pool&lt;Bullet&gt;() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>newObject</span>() = Bullet()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>inner</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Bullet</span> : Entity(), Pool.Poolable, Updatable, Drawable {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>var</span> alive = <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = Vector2()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>            add(UpdateComponent())
+</span></span><span style=display:flex><span>            add(DrawComponent())
+</span></span><span style=display:flex><span>            engine.addEntity(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>revive</span>(x: Float, y: Float) {
+</span></span><span style=display:flex><span>            alive = <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>            position.<span style=color:#66d9ef>set</span>(x, y)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// method required by Pool.Poolable
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#75715e>// this gets called when the object is &#34;freed&#34; back into the object pool
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>reset</span>() {
+</span></span><span style=display:flex><span>            alive = <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (alive) {
+</span></span><span style=display:flex><span>                y <span style=color:#f92672>+=</span> delta * <span style=color:#ae81ff>100f</span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>if</span> (offScreen() <span style=color:#f92672>||</span> collided()) {
+</span></span><span style=display:flex><span>                    bulletPool.free(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (alive) {
+</span></span><span style=display:flex><span>                drawSprite()
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>fireBullet</span>(x: Float, y: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>val</span> b = bulletPool.obtain()
+</span></span><span style=display:flex><span>        b.revive(x, y)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>So in this example we have a <code>BulletManager</code> class that encapsulates the object pool. The rest of our codebase doesn&rsquo;t really need to know about the actual <code>Bullet</code> class that represents a single bullet. It can be used like this in the <code>Player</code> class:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#75715e>// in init
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> bullets = BulletManager(engine)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// in update()
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>if</span> (fireButtonPressed) {
+</span></span><span style=display:flex><span>    bullets.fireBullet(position.x, position.y)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><figure><img src=/entity-component-systems/bullet-hell.gif alt="Animated GIF of 2D space shooter game"><figcaption>When you're spawning bullets this frequently, you don't want to create brand new instances in memory every single time a bullet is fired.</figcaption></figure></p><p>Each individual bullet acts exactly like any other entity in our system so far. It hooks into the game&rsquo;s core loop by registering with the ECS engine, and then it updates itself and draws itself when asked to do so. The only difference here is that it <em>conditionally</em> updates and draws, only when it&rsquo;s alive.</p><p>It doesn&rsquo;t feel great to wrap entire methods in the <code>if (alive)</code> conditional. In this simple example, that&rsquo;s somewhat manageable, but what if there are other domains of logic that we want to only apply to <code>alive</code> objects? For example, instead of calling <code>handleCollision()</code> in our entities&rsquo; <code>update</code> methods, let&rsquo;s say we have a <code>PhysicsSystem</code> that groups entities together by collision category and then handles all the collision checking for us. Suddenly your bullets and everything else that they collide with need to know about that <code>alive</code> state, and check it before collisions are processed.</p><p>To solve this, we&rsquo;ll introduce a new component called <code>InactiveComponent</code> and just use it as a sort of flag for our ECS engine. Any systems that process entities will simply ignore any entities with an <code>InactiveComponent</code> attached to them.</p><p>First, we&rsquo;ll replace the <code>alive</code> boolean in the <code>Bullet</code> class with that new inactive flag component:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>private</span> <span style=color:#66d9ef>inner</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Bullet</span> : Entity(), Pool.Poolable, Updatable, Drawable {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> inactive = InactiveComponent()
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>val</span> position = Vector2()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>init</span> {
+</span></span><span style=display:flex><span>        add(inactive)
+</span></span><span style=display:flex><span>        add(UpdateComponent())
+</span></span><span style=display:flex><span>        add(DrawComponent())
+</span></span><span style=display:flex><span>        engine.addEntity(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>revive</span>(x: Float, y: Float) {
+</span></span><span style=display:flex><span>        remove(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>        position.<span style=color:#66d9ef>set</span>(x, y)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// method required by Pool.Poolable
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#75715e>// this gets called when the object is &#34;freed&#34; back into the object pool
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>reset</span>() {
+</span></span><span style=display:flex><span>        add(inactive)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>update</span>(delta: Float) {
+</span></span><span style=display:flex><span>        y <span style=color:#f92672>+=</span> delta * <span style=color:#ae81ff>100f</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (offScreen() <span style=color:#f92672>||</span> collided()) {
+</span></span><span style=display:flex><span>            bulletPool.free(<span style=color:#66d9ef>this</span>)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>draw</span>() {
+</span></span><span style=display:flex><span>        drawSprite()
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The code hasn&rsquo;t changed really at all. The only two differences are we&rsquo;re adding/removing the <code>InactiveComponent</code> instead of flipping a boolean switch, and we&rsquo;ve removed the conditional from the update/draw methods.</p><p>Now, let&rsquo;s change the way our <code>UpdateSystem</code> and <code>DrawSystem</code> collect entities for processing. They&rsquo;ll now exclude any entity with an <code>InactiveComponent</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>UpdateSystem</span> : IteratingSystem(
+</span></span><span style=display:flex><span>    Family
+</span></span><span style=display:flex><span>        .all(UpdateComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>        .exclude(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>get</span>()
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Updatable) {
+</span></span><span style=display:flex><span>            entity.update(deltaTime)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>class</span> <span style=color:#a6e22e>DrawSystem</span> : SortedIteratingSystem(
+</span></span><span style=display:flex><span>    Family
+</span></span><span style=display:flex><span>        .all(DrawComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>        .exclude(InactiveComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>get</span>(),
+</span></span><span style=display:flex><span>    ZComparator()
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>processEntity</span>(entity: Entity?, deltaTime: Float) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (entity <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>&amp;&amp;</span> entity <span style=color:#66d9ef>is</span> Drawable) {
+</span></span><span style=display:flex><span>            entity.draw()
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> static <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ZComparator</span> : Comparator&lt;Entity&gt; {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>You might have expected us to manually need to check for the existence of the <code>InactiveComponent</code> on the entities within the <code>processEntity</code> method. But the solution is much cleaner: we simply use <code>Family.exclude</code> in the system&rsquo;s constructor, and Ashley takes care of the rest for us.</p><p>This was a simple example, but there are lots of other ways you can use components to mix and match different pieces of state for your entities. Here are some ideas (and you&rsquo;ll see some of these in action within the <a href=https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/hybrid-ecs>sample project for this article</a>):</p><ul><li>Add a <code>HitStunComponent</code> whenever an enemy gets hit. This component doesn&rsquo;t stop the <code>DrawSystem</code> from rendering them, but it stops the <code>UpdateSystem</code> from updating them. Add a barebones <code>HitStunSystem</code> which decrements a countdown on the <code>HitStunComponent</code>, and when the countdown finished, remove the component from the entity.</li><li>Create a <code>FlashComponent</code> with a boolean <code>isDrawing</code> and a countdown timer. In the <code>DrawSystem</code>, only draw entities who either don&rsquo;t have a flash component, or whose flash component&rsquo;s <code>isDrawing</code> is <code>true</code>. Add a barebones <code>FlashSystem</code> which decrements the countdown on the <code>FlashComponent</code> and removes it from the entity when the countdown is done.</li><li>Add a <code>FrozenComponent</code> to enemies that get hit with a freeze gun. This excludes them from the <code>UpdateSystem</code>, but keeps them in the collision-checking <code>PhysicsSystem</code>, and continues to include them in the rendering of <code>DrawSystem</code>. The <code>DrawSystem</code> could also draw them with a special blue-tint shader if it sees a <code>FrozenComponent</code>.</li></ul><p>You can get pretty creative with it, so go crazy.</p><p>That takes care of our second goal. Our core game loop logic within each entity is still clean and simple, and we don&rsquo;t have to worry about a bunch of state as it pertains to entity management. We just let the systems take care of all of that.</p><h2 id=3-entity-clean-up>3. Entity Clean-Up</h2><p><strong>Goal</strong>: Make it easy for my entities to clean up after themselves when I don&rsquo;t need them anymore.</p><p><strong>Solution</strong>: Use <code>engine.removeEntity(entity)</code>, and Ashley takes care of that for you. In some special cases, use an <code>EntityListener</code> to handle the <code>entityRemoved</code> event for other non-ECS cleanup logic.</p><p> </p><p>So we&rsquo;ve talked about how to temporarily remove entities from our ECS engine by excluding them from certain systems. But what do we do when it&rsquo;s time to remove them from the system altogether? For example, what happens to an enemy when you kill it, or an item when you pick it up?</p><p>If we&rsquo;re only concerned with removing something from the engine, then Ashley already has us covered there: simply call <code>engine.removeEntity(entity)</code>. This will schedule the entity for removal, meaning it won&rsquo;t be gathered by any of your systems. Then, once the engine finishes its processing for that frame, it&rsquo;ll remove the entity from its internal list of entities.</p><p>Often that will be all you need. But there <em>are</em> times when you need to be able to handle some other kind of general cleanup logic for each entity as you remove it from your ECS engine. And in that case, you don&rsquo;t want to couple that cleanup in a way that requires you remember to do it every time you call <code>engine.removeEntity(entity)</code>.</p><p>With Ashley, we can register event listeners with our engine and let the cleanup logic happen in there. We set this up one time and register it with the ECS engine, then forget about it. This means we can plug our entities into the engine when we want, remove them when we need to, and forget about all the related logic that needs to execute whenever we remove entities from our game.</p><p>As a simple example, let&rsquo;s say that you&rsquo;re using <a href=https://github.com/libgdx/libgdx/wiki/Box2d>Box2D</a> for your physics. If so, all of your physical entities are going to plug in to your Box2D <code>World</code>, so they&rsquo;ll be referenced and managed in two places: in your Ashley <code>engine</code> and in your Box2D <code>world</code>.</p><p>In this case, you&rsquo;ll need to remove the Box2D body from your game when its related entity is removed from the Ashley engine. Otherwise, you&rsquo;ll have entities which aren&rsquo;t updating or rendering, but which are still colliding and interacting with the other physical objects in your game.</p><p>Ashley makes this simple:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>val</span> physicsFamily = Family.all(PhysicsComponent<span style=color:#f92672>::</span><span style=color:#66d9ef>class</span>.java).<span style=color:#66d9ef>get</span>()
+</span></span><span style=display:flex><span><span style=color:#66d9ef>val</span> physicsListener = <span style=color:#66d9ef>object</span> <span style=color:#960050;background-color:#1e0010>: </span><span style=color:#a6e22e>EntityListener</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>entityAdded</span>(entity: Entity?) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// get BodyComponent from entity, 
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#75715e>// use it to add physics body to Box2D world
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>override</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>entityRemoved</span>(entity: Entity?) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// get BodyComponent from entity, 
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>        <span style=color:#75715e>// use it to remove physics body from Box2D world
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>engine.addEntityListener(physicsFamily, physicsListener)
+</span></span></code></pre></div><p>Notice that I&rsquo;m talking mostly about entity cleanup here, but that the entity listener feature of Ashley solves this broader problem of coupling between multiple systems outside of our ECS engine. In the example above, we demonstrate how we not only remove the physics body from our <code>world</code> when it&rsquo;s removed from our core ECS <code>engine</code>, but also <em>add</em> it to the <code>world</code> when we first register it with our ECS <code>engine</code>.</p><h2 id=conclusion>Conclusion</h2><p>To recap:</p><ul><li>Entity Component Systems (ECS&rsquo;s) solve coupling problems that inheritance often isn&rsquo;t as well-equipped to solve.</li><li>ECS&rsquo;s can make your game logic harder to reason with if you swing your pendulum too hard in the &ldquo;split-up domains&rdquo; direction.</li><li>With our &ldquo;hybrid&rdquo; approach, we can use Ashley&rsquo;s tools to manage our entities in a meaningful way without over-engineering.</li><li>With the hybrid approach, we get to plug our entities into the core game loop and then forget about them.</li><li>We can also use Ashley to manage temporal state for our entities in a self-contained way without blowing up the logical complexity of our entity classes.</li><li>When it&rsquo;s time to remove entities from our ECS engine, we can use <code>EntityListener</code> objects to execute logic that needs to happen on entity removal in an isolated way &ndash; again, without complicating our entity classes too much.</li></ul><p>Thanks for joining me. If you want to look at an example project, I&rsquo;ve created a small arcade shooter that demonstrates my hybrid ECS setup. You can check out <a href=https://github.com/ramorris3/ramorris3.github.io/tree/main/examples/hybrid-ecs>the complete source code here on GitHub</a>.</p></div><div class=post-info><div class="post-date dt-published">2021-04-03</div><a class="post-hidden-url u-url" href=https://littlegames.dev/posts/entity-component-systems/>https://littlegames.dev/posts/entity-component-systems/</a>
+<a href=https://littlegames.dev class="p-name p-author post-hidden-author h-card" rel=me>Alex Morris</a><div class=post-taxonomies><ul class=post-tags><li><a href=https://littlegames.dev/tags/ashley-ecs>#ashley ecs</a></li><li><a href=https://littlegames.dev/tags/libgdx>#libgdx</a></li><li><a href=https://littlegames.dev/tags/sample-project>#sample project</a></li><li><a href=https://littlegames.dev/tags/shmup>#shmup</a></li></ul></div></div></article><div class="pagination post-pagination"><div class="left pagination-item"><a href=/posts/rs-devlog/3-spiders/>Make-it Monday: Rogueslide Devlog #3</a></div><div class="right pagination-item"><a href=/posts/rs-devlog/2-enemies/>Make-it Monday: Rogueslide Devlog #2</a></div></div></main><footer class=common-footer><div class=common-footer-bottom><div class=copyright><p>© Alex Morris, 2022<br><a href=https://twitter.com/ramorris_3 target=_blank><i class="fab fa-twitter-square"></i> @ramorris_3</a><br>Powered by <a target=_blank rel="noopener noreferrer" href=https://gohugo.io/>Hugo</a>, theme <a target=_blank rel="noopener noreferrer" href=https://github.com/mitrichius/hugo-theme-anubis>Anubis</a>.<br></p></div></div><p class="h-card vcard"><a href=https://littlegames.dev class="p-name u-url url fn" rel=me>Alex Morris</a></p></footer></div></body></html>
